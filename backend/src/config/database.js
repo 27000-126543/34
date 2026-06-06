@@ -288,9 +288,9 @@ const seedData = async () => {
       { name: '奶酪', category: 'dairy', rarity: 2, base_price: 45, current_price: 45, freshness_days: 45, season_affect: 0.95 }
     ];
 
-    const insertIngredient = prepare('INSERT INTO ingredients (name, category, rarity, base_price, current_price, freshness_days, season_affect) VALUES (?, ?, ?, ?, ?, ?, ?)');
     for (const item of ingredients) {
-      insertIngredient.run(item.name, item.category, item.rarity, item.base_price, item.current_price, item.freshness_days, item.season_affect);
+      prepare('INSERT INTO ingredients (name, category, rarity, base_price, current_price, freshness_days, season_affect) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(item.name, item.category, item.rarity, item.base_price, item.current_price, item.freshness_days, item.season_affect);
     }
   }
 
@@ -311,9 +311,9 @@ const seedData = async () => {
       { name: '清蒸鲈鱼', cuisine_type: 'chinese', ingredients_json: JSON.stringify([{ ingredient_id: 14, quantity: 300 }, { ingredient_id: 18, quantity: 10 }]), difficulty: 3, rarity: 2, is_unlockable: 1, cost_points: 80 }
     ];
 
-    const insertRecipe = prepare('INSERT INTO recipes (name, cuisine_type, ingredients_json, difficulty, rarity, is_unlockable, cost_points) VALUES (?, ?, ?, ?, ?, ?, ?)');
     for (const item of recipes) {
-      insertRecipe.run(item.name, item.cuisine_type, item.ingredients_json, item.difficulty, item.rarity, item.is_unlockable, item.cost_points);
+      prepare('INSERT INTO recipes (name, cuisine_type, ingredients_json, difficulty, rarity, is_unlockable, cost_points) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(item.name, item.cuisine_type, item.ingredients_json, item.difficulty, item.rarity, item.is_unlockable, item.cost_points);
     }
   }
 
@@ -332,9 +332,9 @@ const seedData = async () => {
       { name: '大师级雕刻刀', type: 'knife', bonus_skill: 18, rarity: 4, cost_points: 300 }
     ];
 
-    const insertEquipment = prepare('INSERT INTO chef_equipment (name, type, bonus_skill, rarity, cost_points) VALUES (?, ?, ?, ?, ?)');
     for (const item of equipments) {
-      insertEquipment.run(item.name, item.type, item.bonus_skill, item.rarity, item.cost_points);
+      prepare('INSERT INTO chef_equipment (name, type, bonus_skill, rarity, cost_points) VALUES (?, ?, ?, ?, ?)')
+        .run(item.name, item.type, item.bonus_skill, item.rarity, item.cost_points);
     }
   }
 
@@ -347,9 +347,9 @@ const seedData = async () => {
       { username: '料理探索者', email: 'explorer@test.com', password: hashedPassword, coins: 18000, reputation: 180, research_points: 150 }
     ];
 
-    const insertPlayer = prepare('INSERT INTO players (username, email, password, coins, reputation, research_points) VALUES (?, ?, ?, ?, ?, ?)');
     for (const item of players) {
-      insertPlayer.run(item.username, item.email, item.password, item.coins, item.reputation, item.research_points);
+      prepare('INSERT INTO players (username, email, password, coins, reputation, research_points) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(item.username, item.email, item.password, item.coins, item.reputation, item.research_points);
     }
 
     const restaurants = [
@@ -358,9 +358,9 @@ const seedData = async () => {
       { owner_id: 3, name: '风味食堂', cuisine_type: 'japanese', decor_style: 'casual', level: 2, total_profit: 32000, avg_rating: 3.9 }
     ];
 
-    const insertRestaurant = prepare('INSERT INTO restaurants (owner_id, name, cuisine_type, decor_style, level, total_profit, avg_rating) VALUES (?, ?, ?, ?, ?, ?, ?)');
     for (const item of restaurants) {
-      insertRestaurant.run(item.owner_id, item.name, item.cuisine_type, item.decor_style, item.level, item.total_profit, item.avg_rating);
+      prepare('INSERT INTO restaurants (owner_id, name, cuisine_type, decor_style, level, total_profit, avg_rating) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        .run(item.owner_id, item.name, item.cuisine_type, item.decor_style, item.level, item.total_profit, item.avg_rating);
     }
 
     const chefs = [
@@ -371,9 +371,9 @@ const seedData = async () => {
       { restaurant_id: 3, name: '田中先生', level: 'head_chef', skill: 72, exp: 5500, pending_promotion: 1 }
     ];
 
-    const insertChef = prepare('INSERT INTO chefs (restaurant_id, name, level, skill, exp, pending_promotion) VALUES (?, ?, ?, ?, ?, ?)');
     for (const item of chefs) {
-      insertChef.run(item.restaurant_id, item.name, item.level, item.skill, item.exp, item.pending_promotion);
+      prepare('INSERT INTO chefs (restaurant_id, name, level, skill, exp, pending_promotion) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(item.restaurant_id, item.name, item.level, item.skill, item.exp, item.pending_promotion);
     }
 
     const dishes = [
@@ -383,9 +383,9 @@ const seedData = async () => {
       { restaurant_id: 3, name: '特制寿司拼盘', cuisine_type: 'japanese', ingredients_json: JSON.stringify([{ ingredient_id: 11, quantity: 150 }]), base_price: 128, rating: 4.4, sales_count: 320, is_rare: 1 }
     ];
 
-    const insertDish = prepare('INSERT INTO dishes (restaurant_id, name, cuisine_type, ingredients_json, base_price, rating, sales_count, is_rare) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
     for (const item of dishes) {
-      insertDish.run(item.restaurant_id, item.name, item.cuisine_type, item.ingredients_json, item.base_price, item.rating, item.sales_count, item.is_rare);
+      prepare('INSERT INTO dishes (restaurant_id, name, cuisine_type, ingredients_json, base_price, rating, sales_count, is_rare) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+        .run(item.restaurant_id, item.name, item.cuisine_type, item.ingredients_json, item.base_price, item.rating, item.sales_count, item.is_rare);
     }
 
     const inventories = [
@@ -402,9 +402,9 @@ const seedData = async () => {
       { restaurant_id: 3, ingredient_id: 20, quantity: 150, freshness: 100 }
     ];
 
-    const insertInventory = prepare('INSERT INTO inventory (restaurant_id, ingredient_id, quantity, freshness) VALUES (?, ?, ?, ?)');
     for (const item of inventories) {
-      insertInventory.run(item.restaurant_id, item.ingredient_id, item.quantity, item.freshness);
+      prepare('INSERT INTO inventory (restaurant_id, ingredient_id, quantity, freshness) VALUES (?, ?, ?, ?)')
+        .run(item.restaurant_id, item.ingredient_id, item.quantity, item.freshness);
     }
   }
 };
