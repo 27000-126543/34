@@ -184,35 +184,49 @@ const allianceService = {
 
     const challengerDishes = Dish.findByRestaurantId(duel.challenger_id);
     const defenderDishes = Dish.findByRestaurantId(duel.defender_id);
-    const challengerChefs = Chef.findByRestaurantId(duel.challenger_id);
-    const defenderChefs = Chef.findByRestaurantId(duel.defender_id);
 
-    const results = [];
+    const rounds = [];
     let challengerWins = 0;
     let defenderWins = 0;
+    let ties = 0;
 
-    const roundCount = Math.min(3, challengerDishes.length, defenderDishes.length);
+    const roundCount = Math.min(5, challengerDishes.length, defenderDishes.length);
 
     for (let i = 0; i < roundCount; i++) {
       const cDish = challengerDishes[i];
       const dDish = defenderDishes[i];
-      const cChef = challengerChefs[i % challengerChefs.length];
-      const dChef = defenderChefs[i % defenderChefs.length];
 
-      const cScore = cDish && cChef ? ratingService.calculateDishRatingForRestaurant(cDish.id, cChef.id) || 3 : 3;
-      const dScore = dDish && dChef ? ratingService.calculateDishRatingForRestaurant(dDish.id, dChef.id) || 3 : 3;
+      const cScore = cDish.rating * 0.6 + Math.min(100, cDish.sales_count) / 100 * 0.4;
+      const dScore = dDish.rating * 0.6 + Math.min(100, dDish.sales_count) / 100 * 0.4;
 
-      const roundResult = {
+      let winner;
+      if (cScore > dScore) {
+        winner = 'challenger';
+        challengerWins++;
+      } else if (dScore > cScore) {
+        winner = 'defender';
+        defenderWins++;
+      } else {
+        winner = 'tie';
+        ties++;
+      }
+
+      rounds.push({
         round: i + 1,
-        challenger: { dish_name: cDish?.name, score: cScore },
-        defender: { dish_name: dDish?.name, score: dScore },
-        winner: cScore > dScore ? 'challenger' : dScore > cScore ? 'defender' : 'tie'
-      };
-
-      if (roundResult.winner === 'challenger') challengerWins++;
-      else if (roundResult.winner === 'defender') defenderWins++;
-
-      results.push(roundResult);
+        challenger: {
+          dish_name: cDish.name,
+          score: cScore,
+          sales_count: cDish.sales_count,
+          rating: cDish.rating
+        },
+        defender: {
+          dish_name: dDish.name,
+          score: dScore,
+          sales_count: dDish.sales_count,
+          rating: dDish.rating
+        },
+        winner
+      });
     }
 
     const winnerId = challengerWins > defenderWins ? duel.challenger_id
@@ -221,23 +235,26 @@ const allianceService = {
 
     if (winnerId) {
       const winner = Restaurant.findById(winnerId);
-      if (winner) {
-        Player.updateReputation(winner.owner_id, 25);
-      }
       const loserId = winnerId === duel.challenger_id ? duel.defender_id : duel.challenger_id;
       const loser = Restaurant.findById(loserId);
-      if (loser) {
-        Player.updateReputation(loser.owner_id, -5);
-      }
+
+      Player.updateReputation(winner.owner_id, 25);
+      Player.updateReputation(loser.owner_id, -5);
+
+      Restaurant.update(winnerId, { total_profit: (winner.total_profit || 0) + 1000 });
+      Restaurant.update(loserId, { total_profit: (loser.total_profit || 0) - 100 });
     }
 
-    const completedDuel = Duel.complete(duelId, winnerId, results);
+    const completedDuel = Duel.complete(duelId, winnerId, rounds);
 
     return {
       success: true,
       duel: completedDuel,
       challenger_wins: challengerWins,
-      defender_wins: defenderWins
+      defender_wins: defenderWins,
+      ties,
+      winner_id: winnerId,
+      rounds
     };
   },
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 const Restaurant = require('../models/Restaurant');
+const Alliance = require('../models/Alliance');
 const allianceService = require('../services/allianceService');
 
 let io;
@@ -12,8 +13,7 @@ const setIo = (socketIo) => {
 
 router.get('/', auth, (req, res) => {
   try {
-    const alliances = allianceService.getAllianceStats;
-    const allAlliances = require('../models/Alliance').findAll();
+    const allAlliances = Alliance.findAll();
     res.json({ alliances: allAlliances });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -22,7 +22,7 @@ router.get('/', auth, (req, res) => {
 
 router.get('/player', auth, (req, res) => {
   try {
-    const alliances = require('../models/Alliance').findByPlayerId(req.player.id);
+    const alliances = Alliance.findByPlayerId(req.player.id);
     res.json({ alliances });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -49,6 +49,9 @@ router.post('/', auth, (req, res) => {
       return res.status(400).json({ error: '请提供联盟名称' });
     }
     const result = allianceService.createAlliance(name, req.player.id);
+    if (result.success && io) {
+      io.emit('alliance:update', { type: 'create', data: result });
+    }
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });

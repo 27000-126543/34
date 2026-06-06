@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 const Restaurant = require('../models/Restaurant');
+const Competition = require('../models/Competition');
 const competitionService = require('../services/competitionService');
 
 let io;
@@ -108,7 +109,10 @@ router.post('/:id/start', auth, (req, res) => {
     if (result && !result.error && io) {
       io.emit('competition:update', { type: 'start', data: result });
     }
-    res.json(result);
+    if (result && result.error) {
+      return res.status(400).json(result);
+    }
+    res.json({ competition: result });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -116,6 +120,10 @@ router.post('/:id/start', auth, (req, res) => {
 
 router.post('/:id/execute', auth, (req, res) => {
   try {
+    const competition = Competition.findById(req.params.id);
+    if (!competition || competition.status !== 'active') {
+      return res.status(400).json({ error: '比赛未激活' });
+    }
     const results = competitionService.executeCompetitionRound(req.params.id);
     if (results && io) {
       io.emit('competition:update', { type: 'round_result', data: results });

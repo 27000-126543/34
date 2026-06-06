@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { initDatabase } = require('./config/database');
 
 const authRoutes = require('./routes/auth');
@@ -26,6 +27,15 @@ const createApp = async (io) => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+
+  app.use('/api/', apiLimiter);
+
   setMarketIo(io);
   setCompetitionIo(io);
   setAllianceIo(io);
@@ -47,6 +57,9 @@ const createApp = async (io) => {
   app.use('/api/alliances', allianceRoutes);
   app.use('/api/reports', reportRoutes);
   app.use('/api/leaderboards', leaderboardRoutes);
+
+  const { startGameLoop } = require('./services/gameLoop');
+  startGameLoop(io);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'API 路由不存在' });

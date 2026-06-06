@@ -35,14 +35,15 @@ const attachCustomMethods = () => {
 
   db.prepare = (sql) => {
     const stmt = originalPrepare(sql);
+    let finalized = false;
     return {
       run: (...params) => {
+        if (finalized) throw new Error('Statement already finalized');
         if (params.length > 0) stmt.bind(params);
         while (stmt.step()) {}
         stmt.reset();
-        stmt.free();
-        saveDatabase();
         const lid = getLastInsertId();
+        saveDatabase();
         return {
           lastInsertRowid: lid,
           lastID: lid,
@@ -50,24 +51,30 @@ const attachCustomMethods = () => {
         };
       },
       get: (...params) => {
+        if (finalized) throw new Error('Statement already finalized');
         if (params.length > 0) stmt.bind(params);
         let result = null;
         if (stmt.step()) {
           result = stmt.getAsObject();
         }
         stmt.reset();
-        stmt.free();
         return result;
       },
       all: (...params) => {
+        if (finalized) throw new Error('Statement already finalized');
         if (params.length > 0) stmt.bind(params);
         const results = [];
         while (stmt.step()) {
           results.push(stmt.getAsObject());
         }
         stmt.reset();
-        stmt.free();
         return results;
+      },
+      finalize: () => {
+        if (!finalized) {
+          stmt.free();
+          finalized = true;
+        }
       }
     };
   };

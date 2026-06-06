@@ -133,43 +133,53 @@ const reportService = {
     const centerY = y + size / 2;
     const radius = size / 2 - 20;
     const sides = data.labels.length;
-    const angleStep = (Math.PI * 2) / sides;
 
     doc.save();
 
-    for (let level = 1; level <= 5; level++) {
+    for (let level = 5; level >= 1; level--) {
       const r = radius * (level / 5);
-      doc.circle(centerX, centerY, r).strokeColor('#ddd').lineWidth(0.5).stroke();
+      let pathStr = '';
+      for (let i = 0; i < sides; i++) {
+        const angle = i * (2 * Math.PI / sides) - Math.PI / 2;
+        const px = centerX + Math.cos(angle) * r;
+        const py = centerY + Math.sin(angle) * r;
+        if (i === 0) {
+          pathStr += `M ${px} ${py} `;
+        } else {
+          pathStr += `L ${px} ${py} `;
+        }
+      }
+      pathStr += 'Z';
+      doc.path(pathStr).strokeColor('#ddd').lineWidth(0.5).stroke();
     }
 
     for (let i = 0; i < sides; i++) {
-      const angle = i * angleStep - Math.PI / 2;
+      const angle = i * (2 * Math.PI / sides) - Math.PI / 2;
       const x1 = centerX + Math.cos(angle) * radius;
       const y1 = centerY + Math.sin(angle) * radius;
-      doc.moveTo(centerX, centerY).lineTo(x1, y1).strokeColor('#ccc').lineWidth(0.5).stroke();
+      doc.path(`M ${centerX} ${centerY} L ${x1} ${y1}`).strokeColor('#ccc').lineWidth(0.5).stroke();
     }
 
     const dataset = data.datasets[0];
-    doc.moveTo(
-      centerX + Math.cos(-Math.PI / 2) * radius * (dataset.data[0] / 100),
-      centerY + Math.sin(-Math.PI / 2) * radius * (dataset.data[0] / 100)
-    );
-
-    for (let i = 1; i < sides; i++) {
-      const angle = i * angleStep - Math.PI / 2;
+    let dataPathStr = '';
+    for (let i = 0; i < sides; i++) {
+      const angle = i * (2 * Math.PI / sides) - Math.PI / 2;
       const value = dataset.data[i] / 100;
-      doc.lineTo(
-        centerX + Math.cos(angle) * radius * value,
-        centerY + Math.sin(angle) * radius * value
-      );
+      const px = centerX + Math.cos(angle) * radius * value;
+      const py = centerY + Math.sin(angle) * radius * value;
+      if (i === 0) {
+        dataPathStr += `M ${px} ${py} `;
+      } else {
+        dataPathStr += `L ${px} ${py} `;
+      }
     }
-
-    doc.closePath()
+    dataPathStr += 'Z';
+    doc.path(dataPathStr)
       .fillColor('rgba(54, 162, 235, 0.3)').fill()
       .strokeColor('rgba(54, 162, 235, 1)').lineWidth(2).stroke();
 
     for (let i = 0; i < sides; i++) {
-      const angle = i * angleStep - Math.PI / 2;
+      const angle = i * (2 * Math.PI / sides) - Math.PI / 2;
       const labelX = centerX + Math.cos(angle) * (radius + 15);
       const labelY = centerY + Math.sin(angle) * (radius + 15);
       doc.fontSize(10).fillColor('#333').text(data.labels[i], labelX - 20, labelY - 6, { width: 40, align: 'center' });
@@ -186,6 +196,7 @@ const reportService = {
     doc.save();
 
     const colors = ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'];
+    const fillColors = ['rgba(75, 192, 192, 0.2)', 'rgba(255, 99, 132, 0.2)'];
 
     let maxValue = 0;
     for (const ds of data.datasets) {
@@ -196,8 +207,7 @@ const reportService = {
 
     for (let i = 0; i <= 5; i++) {
       const yLine = y + padding.top + chartHeight * (i / 5);
-      doc.moveTo(x + padding.left, yLine)
-        .lineTo(x + width - padding.right, yLine)
+      doc.path(`M ${x + padding.left} ${yLine} L ${x + width - padding.right} ${yLine}`)
         .strokeColor('#eee').lineWidth(0.5).stroke();
 
       const labelValue = Math.round(maxValue * (1 - i / 5));
@@ -213,18 +223,31 @@ const reportService = {
     data.datasets.forEach((dataset, dsIndex) => {
       if (dataset.data.length === 0) return;
 
-      doc.moveTo(
-        x + padding.left,
-        y + padding.top + chartHeight * (1 - dataset.data[0] / maxValue)
-      );
+      let linePathStr = '';
+      let fillPathStr = '';
+      const color = colors[dsIndex % colors.length];
+      const fillColor = fillColors[dsIndex % fillColors.length];
 
-      for (let i = 1; i < dataset.data.length; i++) {
+      for (let i = 0; i < dataset.data.length; i++) {
         const xPos = x + padding.left + (chartWidth / (dataset.data.length - 1 || 1)) * i;
         const yPos = y + padding.top + chartHeight * (1 - dataset.data[i] / maxValue);
-        doc.lineTo(xPos, yPos);
+        if (i === 0) {
+          linePathStr += `M ${xPos} ${yPos} `;
+          fillPathStr += `M ${xPos} ${yPos} `;
+        } else {
+          linePathStr += `L ${xPos} ${yPos} `;
+          fillPathStr += `L ${xPos} ${yPos} `;
+        }
       }
 
-      doc.strokeColor(colors[dsIndex % colors.length]).lineWidth(2).stroke();
+      const lastX = x + padding.left + (chartWidth / (dataset.data.length - 1 || 1)) * (dataset.data.length - 1);
+      const firstX = x + padding.left;
+      const bottomY = y + padding.top + chartHeight;
+      fillPathStr += `L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+
+      doc.path(fillPathStr).fillColor(fillColor).fill();
+
+      doc.path(linePathStr).strokeColor(color).lineWidth(2).stroke();
     });
 
     const legendY = y + 5;
