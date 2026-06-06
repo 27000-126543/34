@@ -299,7 +299,7 @@ const reportService = {
     doc.fontSize(16).text('能力雷达图', { underline: true });
     doc.moveDown(0.3);
     if (radarData) {
-      reportService.drawRadarInPDF(doc, 70, doc.y, 400, 400, radarData);
+      reportService.drawRadarInPDF(doc, 70, doc.y, 400, radarData);
     }
     doc.moveDown(1);
 

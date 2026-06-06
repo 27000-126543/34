@@ -247,6 +247,16 @@ const allianceService = {
 
     const completedDuel = Duel.complete(duelId, winnerId, rounds);
 
+    let winner = null;
+    let loser = null;
+    if (winnerId) {
+      const w = Restaurant.findById(winnerId);
+      const loserId = winnerId === duel.challenger_id ? duel.defender_id : duel.challenger_id;
+      const l = Restaurant.findById(loserId);
+      winner = w ? { id: w.id, name: w.name, owner_id: w.owner_id, reputation_change: 25 } : null;
+      loser = l ? { id: l.id, name: l.name, owner_id: l.owner_id, reputation_change: -5 } : null;
+    }
+
     return {
       success: true,
       duel: completedDuel,
@@ -254,6 +264,9 @@ const allianceService = {
       defender_wins: defenderWins,
       ties,
       winner_id: winnerId,
+      winner,
+      loser,
+      dish_matches: rounds,
       rounds
     };
   },

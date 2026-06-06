@@ -38,6 +38,15 @@ router.get('/completed', auth, (req, res) => {
   }
 });
 
+router.get('/:id/realtime', auth, (req, res) => {
+  try {
+    const metrics = competitionService.calculateRealTimeMetrics(req.params.id);
+    res.json(metrics);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get('/:id', auth, (req, res) => {
   try {
     const competition = competitionService.getCompetitionDetails(req.params.id);
